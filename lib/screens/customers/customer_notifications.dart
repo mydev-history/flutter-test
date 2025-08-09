@@ -1,0 +1,276 @@
+// import 'package:flutter/material.dart';
+// import 'package:wah_frontend_flutter/services/customer_service.dart';
+
+// class CustomerNotifications extends StatefulWidget {
+//   final String customerId;
+
+//   const CustomerNotifications({Key? key, required this.customerId}) : super(key: key);
+
+//   @override
+//   _CustomerNotificationsState createState() => _CustomerNotificationsState();
+// }
+
+// class _CustomerNotificationsState extends State<CustomerNotifications> {
+//   late Future<List<Map<String, dynamic>>> _notificationsFuture;
+//   final CustomerService _customerService = CustomerService();
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _notificationsFuture = _customerService.fetchCustomerNotifications(widget.customerId);
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final screenWidth = MediaQuery.of(context).size.width;
+//     final screenHeight = MediaQuery.of(context).size.height;
+
+//     return Scaffold(
+//       backgroundColor: Colors.white,
+//       appBar: AppBar(
+//       backgroundColor: Colors.white,
+//       elevation: 0,
+//       centerTitle: true,
+//       iconTheme: const IconThemeData(color: Colors.black),
+//       title: Row(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         mainAxisSize: MainAxisSize.min, // Ensures the row takes only necessary space
+//         children: [
+//           Image.asset(
+//             'assets/wah_logo.png', // ✅ Use the correct path to your logo
+//             height: 24, // Adjust as needed
+//           ),
+//           const SizedBox(width: 8), // Space between logo and text
+//           const Text(
+//             "Notifications",
+//             style: TextStyle(
+//               fontSize: 20,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black, // Ensure text color is visible
+//             ),
+//           ),
+//         ],
+//       ),
+//     ),
+
+//       body: Padding(
+//         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
+//         child: FutureBuilder<List<Map<String, dynamic>>>(
+//           future: _notificationsFuture,
+//           builder: (context, snapshot) {
+//             if (snapshot.connectionState == ConnectionState.waiting) {
+//               return const Center(child: CircularProgressIndicator());
+//             } else if (snapshot.hasError) {
+//               return Center(child: Text("Error: ${snapshot.error}"));
+//             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+//               return const Center(child: Text("No notifications available"));
+//             }
+
+//             final notifications = snapshot.data!;
+//             return ListView.builder(
+//               itemCount: notifications.length,
+//               itemBuilder: (context, index) {
+//                 final notification = notifications[index];
+//                 final isPositive = notification['type'] == "positive";
+
+//                 return Padding(
+//                   padding: EdgeInsets.only(bottom: screenHeight * 0.015),
+//                   child: Row(
+//                     children: [
+//                       Container(
+//                         width: screenWidth * 0.015,
+//                         height: screenHeight * 0.1,
+//                         decoration: BoxDecoration(
+//                           color: isPositive ? Colors.green : Colors.red,
+//                           borderRadius: BorderRadius.circular(10),
+//                         ),
+//                       ),
+//                       SizedBox(width: screenWidth * 0.03),
+//                       Expanded(
+//                         child: Container(
+//                           padding: EdgeInsets.all(screenWidth * 0.04),
+//                           decoration: BoxDecoration(
+//                             color: Colors.white,
+//                             borderRadius: BorderRadius.circular(12),
+//                             boxShadow: [
+//                               BoxShadow(
+//                                 color: Colors.grey.shade300,
+//                                 blurRadius: 5,
+//                                 spreadRadius: 2,
+//                                 offset: const Offset(0, 2),
+//                               ),
+//                             ],
+//                           ),
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Text(
+//                                 notification['message'],
+//                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+//                               ),
+//                               SizedBox(height: screenHeight * 0.005),
+//                               Text(
+//                                 notification['date'] + " • " + notification['time'],
+//                                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             );
+//           },
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+import 'package:flutter/material.dart';
+import 'package:wah_frontend_flutter/services/customer_service.dart';
+
+class CustomerNotifications extends StatefulWidget {
+  final String customerId;
+
+  const CustomerNotifications({Key? key, required this.customerId}) : super(key: key);
+
+  @override
+  _CustomerNotificationsState createState() => _CustomerNotificationsState();
+}
+
+class _CustomerNotificationsState extends State<CustomerNotifications> {
+  late Future<List<Map<String, dynamic>>> _notificationsFuture;
+  final CustomerService _customerService = CustomerService();
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationsFuture = _fetchAndMarkNotifications();
+  }
+
+  /// ✅ Fetch notifications and then mark them as read
+  Future<List<Map<String, dynamic>>> _fetchAndMarkNotifications() async {
+    final notifications = await _customerService.fetchCustomerNotifications(widget.customerId);
+
+    if (notifications.isNotEmpty) {
+      await _customerService.markNotificationsAsRead(widget.customerId);
+    }
+
+    return notifications;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/wah_logo.png',
+              height: screenHeight * 0.035, // Responsive height
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              "Notifications",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _notificationsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text("Error: ${snapshot.error}"));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text("No notifications available"));
+            }
+
+            final notifications = snapshot.data!;
+            return ListView.builder(
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                final isPositive = notification['type'] == "positive";
+
+                return Padding(
+                  padding: EdgeInsets.only(bottom: screenHeight * 0.015),
+                  child: Row(
+                    children: [
+                      // ✅ Status Bar (Green for positive, Red for negative)
+                      Container(
+                        width: screenWidth * 0.015,
+                        height: screenHeight * 0.1,
+                        decoration: BoxDecoration(
+                          color: isPositive ? Colors.green : Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      SizedBox(width: screenWidth * 0.03),
+
+                      // ✅ Notification Box
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(screenWidth * 0.04),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade300,
+                                blurRadius: 5,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                notification['message'],
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: screenHeight * 0.005),
+                              Text(
+                                notification['date'] + " • " + notification['time'],
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
